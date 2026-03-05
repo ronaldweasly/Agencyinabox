@@ -22,6 +22,8 @@ from instructor import from_genai, Mode
 from pydantic import BaseModel, Field
 from tenacity import retry, retry_if_exception_type, stop_after_attempt, wait_exponential
 
+from agency_config import AGENCY_CONFIG, agency_prompt_snippet
+
 log = logging.getLogger(__name__)
 
 # ── Gemini client ────────────────────────────────────────────────────────────
@@ -51,43 +53,38 @@ class ICPScore(BaseModel):
     recommended_action: str = Field(
         description="'approve', 'reject', or 'review' — advisory only, human decides"
     )
+    recommended_service: str = Field(
+        description="Best-fit service key from AGENCY_CONFIG['services'], e.g. 'website_modernization'"
+    )
+    pain_point: str = Field(
+        max_length=300,
+        description="One-sentence pain point that the recommended service solves for THIS company",
+    )
+    pitch_angle: str = Field(
+        max_length=500,
+        description="Personalised one-liner pitch (used as email hook later)",
+    )
 
 
-# ── ICP definition (configurable per client) ────────────────────────────────
+# ── ICP definition (driven by agency_config) ─────────────────────────────────
 
+_icp = AGENCY_CONFIG["icp"]
 DEFAULT_ICP = {
-    "target_niches": [
-        "IT consulting",
-        "Software development",
-        "Digital agency",
-        "Web development",
-        "E-commerce",
-        "SaaS",
-        "Marketing agency",
-    ],
-    "target_regions": ["Netherlands", "België", "DACH"],
-    "company_size": "5-200 employees",
-    "decision_maker_titles": [
-        "CEO", "CTO", "Owner", "Managing Director",
-        "Directeur", "Eigenaar", "Oprichter",
-    ],
-    "disqualifiers": [
-        "Government/overheid",
-        "Non-profit/stichting (unless tech-adjacent)",
-        "Competitor (same service offering as us)",
-        "Company dissolved / inactive",
-    ],
-    "ideal_signals": [
-        "Active website with tech stack info",
-        "Recent job postings for developers",
-        "Growing company (LinkedIn signals)",
-        "Uses modern tech stack",
-    ],
+    "target_industries": _icp["industries"],
+    "target_regions": _icp["regions"],
+    "company_size": _icp["employee_range"],
+    "decision_maker_titles": _icp["decision_maker_titles"],
+    "disqualifiers": _icp["disqualifiers"],
+    "services_we_sell": list(AGENCY_CONFIG["services"].keys()),
+    "service_signals": {
+        k: v["signals"] for k, v in AGENCY_CONFIG["services"].items()
+    },
 }
 
 SCORING_PROMPT = """\
-You are an ICP (Ideal Customer Profile) scoring engine for a Dutch B2B
-automation agency. Score the following lead on a 0-100 scale.
+You are an ICP scoring engine for a US-based digital agency.
+
+{agency_context}
 
 ## ICP Definition
 {icp_json}
@@ -102,10 +99,9 @@ automation agency. Score the following lead on a 0-100 scale.
 - 20-39:  Poor fit — likely reject
 - 0-19:   Disqualified — reject
 
-Be specific in your reasoning. Mention which ICP criteria match or don't match.
-If KvK is not validated, note that as a risk factor (deduct 5-10 points).
-If no contact email found, deduct 15-20 points (can't reach them).
-Write reasoning in English (operators read English).
+You MUST also pick the single best-fit service from the services list above
+and write a one-sentence pain_point and a personalised pitch_angle.
+If no service fits, set recommended_service to 'none'.
 """
 
 
@@ -141,6 +137,7 @@ def score_lead(lead: dict, icp: dict | None = None) -> ICPScore:
     }
 
     prompt = SCORING_PROMPT.format(
+        agency_context=agency_prompt_snippet(),
         icp_json=json.dumps(icp, indent=2),
         lead_json=json.dumps(safe_lead, indent=2),
     )
@@ -201,9 +198,17 @@ def score_leads_batch(
                 cur.execute(
                     """UPDATE leads
                        SET icp_score = %s, icp_reasoning = %s,
-                           status = 'scored'
+                           recommended_service = %s, pain_point = %s,
+                           pitch_angle = %s, status = 'scored'
                        WHERE id = %s""",
-                    (icp_score.score, icp_score.reasoning, lead_id),
+                    (
+                        icp_score.score,
+                        icp_score.reasoning,
+                        icp_score.recommended_service,
+                        icp_score.pain_point,
+                        icp_score.pitch_angle,
+                        lead_id,
+                    ),
                 )
             conn.commit()
 
@@ -290,4 +295,18 @@ def run_lead_scoring(conn, job: dict) -> float:
         f"Scored {len(results)} leads. "
         f"Approx cost: ${cost:.4f}"
     )
+
+    # ── Auto-queue pitch_select for leads that scored >= 40 ──────────────
+    qualified_ids = [r["lead_id"] for r in results if r["score"] >= 40]
+    if qualified_ids:
+        import json as _json
+        with conn.cursor() as cur:
+            cur.execute(
+                """INSERT INTO jobs (job_type, payload, status)
+                   VALUES ('pitch_select', %s, 'pending')""",
+                (_json.dumps({"lead_ids": qualified_ids}),),
+            )
+        conn.commit()
+        log.info(f"Queued pitch_select job for {len(qualified_ids)} leads")
+
     return cost

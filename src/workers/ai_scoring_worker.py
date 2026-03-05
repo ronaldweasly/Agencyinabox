@@ -12,7 +12,7 @@ import os
 import anthropic
 import psycopg2
 
-from src.queue_manager import ApiRateLimiter, celery_app
+from queue_manager import ApiRateLimiter, celery_app
 
 log = logging.getLogger(__name__)
 

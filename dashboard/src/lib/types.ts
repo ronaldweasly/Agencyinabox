@@ -1,3 +1,53 @@
+// ── Growth engine types ──────────────────────────────────────────────────────
+
+export type ServiceType =
+  | 'website_modernization'
+  | 'ai_automation'
+  | 'online_booking'
+  | 'seo_local'
+  | 'paid_ads'
+  | 'none'
+
+export interface PitchDecision {
+  service_key: ServiceType
+  headline: string
+  hook: string
+  pain_point: string
+  proof_point: string
+  cta: string
+  confidence: number
+}
+
+export interface IntentSignal {
+  type: 'hiring' | 'funding' | 'expansion' | 'tech_change' | 'pain'
+  title: string
+  url: string
+  snippet: string
+  detected_at: string
+}
+
+export interface CompetitorSignal {
+  id: string
+  lead_id: string
+  competitor_name: string
+  competitor_url: string
+  signal_type: 'ad_copy' | 'pricing' | 'feature_gap' | 'review_weakness' | 'general'
+  detail: string
+  has_weakness: boolean
+  found_at: string
+}
+
+export interface WinningAngle {
+  campaign_id: string
+  campaign_name: string
+  reply_rate: number
+  open_rate: number
+  sent: number
+  replies: number
+}
+
+// ── Core types ───────────────────────────────────────────────────────────────
+
 export interface Company {
   id: string
   name: string
@@ -23,6 +73,8 @@ export interface Company {
   suppressed_until: string | null
   first_seen_source: string
   created_at: string
+  recommended_service?: ServiceType
+  pain_point?: string
 }
 
 export interface Contact {
@@ -96,7 +148,7 @@ export interface PipelineEvent {
   type: 'discovery' | 'enrichment' | 'ai_score' | 'email_sent' | 'reply' | 'error'
   source: string
   message: string
-  metadata: Record<string, any>
+  metadata: Record<string, unknown>
   timestamp: string
 }
 

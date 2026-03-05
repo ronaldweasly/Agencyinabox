@@ -10,6 +10,7 @@ import {
     ApiKey,
     ToolStatus,
     Conversation,
+    ConversationMessage,
 } from "./types";
 
 const now = new Date();
@@ -338,4 +339,21 @@ export const mockConversations: Conversation[] = [
         id: 'conv_2', company_name: 'Cedar Valley Dental', contact_name: 'Sarah Johnson', contact_email: 'sarah@cedarvalleydental.com', contact_title: 'Practice Owner', company_domain: 'cedarvalleydental.com', ai_score: 71, score_tier: 'hot', status: 'active', campaign_name: 'Healthcare Automation Seq', email_hook: 'Your Google reviews are great — but I noticed patients can\'t book online...', recommended_service: 'AI Automation + Online Booking', last_activity_at: new Date(Date.now() - 7_200_000).toISOString(), messages: [ { id: 'msg_2a', direction: 'outbound', subject: 'Cedar Valley Dental — patient booking question', body: `Hi Sarah,\n\nYour Google reviews are great (4.9 stars with 340 reviews) — but I noticed patients can't book appointments online, which is increasingly what patients expect before they even call.\n\nDental practices that add online booking typically see 25% more new patient inquiries within 60 days.\n\nWorth a quick chat?\n\nAlex`, sent_at: new Date(Date.now() - 86_400_000 * 2).toISOString(), opened_at: new Date(Date.now() - 86_400_000).toISOString(), clicked_at: new Date(Date.now() - 86_400_000).toISOString(), sentiment: 'not_analyzed', ai_analysis: null, is_ai_generated: true, }, ], },
     {
         id: 'conv_3', company_name: 'Acme Roofing Co', contact_name: 'Mike Davis', contact_email: 'mike@acmeroofing.com', contact_title: 'Owner', company_domain: 'acmeroofing.com', ai_score: 55, score_tier: 'warm', status: 'not_interested', campaign_name: 'Web Dev Sequence 3', email_hook: 'Your website loads in 8 seconds — here\'s what that\'s costing you...', recommended_service: 'Website Modernization', last_activity_at: new Date(Date.now() - 86_400_000).toISOString(), messages: [ { id: 'msg_3a', direction: 'outbound', subject: 'Acme Roofing website speed issue', body: `Hi Mike,\n\nYour website loads in 8 seconds on mobile — Google data shows 53% of visitors leave if a page takes more than 3 seconds. That's roughly half your ad spend going to waste.\n\nI fix this for roofing companies in Texas. Takes about 2 weeks.\n\nAlex`, sent_at: new Date(Date.now() - 86_400_000 * 5).toISOString(), opened_at: new Date(Date.now() - 86_400_000 * 4).toISOString(), clicked_at: null, sentiment: 'not_analyzed', ai_analysis: null, is_ai_generated: true, }, { id: 'msg_3b', direction: 'inbound', subject: 'Re: Acme Roofing website speed issue', body: `Not interested, please remove me from your list.`, sent_at: new Date(Date.now() - 86_400_000).toISOString(), opened_at: null, clicked_at: null, sentiment: 'negative', ai_analysis: 'Clear unsubscribe request. No further contact should be made. Lead suppressed. Sentiment: negative. No buying signals present.', is_ai_generated: false, }, ], },
+]
+
+// ── Growth engine mock data ─────────────────────────────────────────────────
+
+export const mockCompetitorSignals = [
+    { id: 'cs_1', lead_id: 'lead_1', competitor_name: 'LocalWebPros', competitor_url: 'https://localwebpros.com', signal_type: 'pricing' as const, detail: 'Charges $5,000+ for basic WordPress sites — 2x market rate for the quality delivered.', has_weakness: true, found_at: new Date(Date.now() - 3_600_000).toISOString() },
+    { id: 'cs_2', lead_id: 'lead_1', competitor_name: 'QuickSite Agency', competitor_url: 'https://quicksite.io', signal_type: 'review_weakness' as const, detail: '2.3 stars on Google — clients complain about slow turnaround and no post-launch support.', has_weakness: true, found_at: new Date(Date.now() - 7_200_000).toISOString() },
+    { id: 'cs_3', lead_id: 'lead_2', competitor_name: 'ChatBotNow', competitor_url: 'https://chatbotnow.com', signal_type: 'feature_gap' as const, detail: 'Only supports scripted flows — no AI/NLP. Customers asking for smarter chatbots in reviews.', has_weakness: true, found_at: new Date(Date.now() - 86_400_000).toISOString() },
+    { id: 'cs_4', lead_id: 'lead_3', competitor_name: 'SEO Kings', competitor_url: 'https://seokings.com', signal_type: 'ad_copy' as const, detail: 'Running Google Ads for "HVAC SEO Austin" — $12/click, landing page has no social proof.', has_weakness: false, found_at: new Date(Date.now() - 86_400_000 * 2).toISOString() },
+]
+
+export const mockWinningAngles = [
+    { campaign_id: 'camp_1', campaign_name: 'Website Speed — HVAC Texas', reply_rate: 4.8, open_rate: 52.3, sent: 500, replies: 24 },
+    { campaign_id: 'camp_2', campaign_name: 'Online Booking — Dental', reply_rate: 3.9, open_rate: 48.1, sent: 380, replies: 15 },
+    { campaign_id: 'camp_3', campaign_name: 'AI Chatbot — Auto Repair', reply_rate: 3.2, open_rate: 45.7, sent: 620, replies: 20 },
+    { campaign_id: 'camp_4', campaign_name: 'Local SEO — Plumbing FL', reply_rate: 2.8, open_rate: 41.2, sent: 450, replies: 13 },
+    { campaign_id: 'camp_5', campaign_name: 'Google Ads — Legal Austin', reply_rate: 2.1, open_rate: 38.9, sent: 290, replies: 6 },
 ]

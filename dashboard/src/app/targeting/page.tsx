@@ -4,7 +4,7 @@ import { useState } from 'react'
 import { Shell } from '@/components/layout/Shell'
 import { motion, AnimatePresence } from 'framer-motion'
 import { MapPin, Plus, Trash2, ToggleLeft, ToggleRight,
-         Target, Zap, Globe, Search } from 'lucide-react'
+         Target, Zap, Globe, Search, ChevronDown, AlertCircle } from 'lucide-react'
 import useSWR from 'swr'
 import type { ScrapeTarget, ScrapingCategory } from '@/lib/types'
 

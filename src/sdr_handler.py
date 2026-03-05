@@ -28,6 +28,7 @@ from pydantic import BaseModel, Field
 from tenacity import retry, retry_if_exception_type, stop_after_attempt, wait_exponential
 
 from config import WORKER_ID
+from agency_config import agency_prompt_snippet
 
 log = logging.getLogger(__name__)
 
@@ -64,30 +65,42 @@ class DraftReply(BaseModel):
         default_factory=list,
         description="Key points detected in their reply",
     )
+    service_mentioned: str = Field(
+        default="",
+        description="If reply references a specific service, note which one",
+    )
+    sequence_step: str = Field(
+        default="initial",
+        description="'initial', 'follow_up_1', 'follow_up_2', 'break_up' — where we are in the sequence",
+    )
 
 
 # ── Reply generation prompt ──────────────────────────────────────────────────
 
 SDR_SYSTEM_PROMPT = """\
-Je bent een professionele Nederlandse B2B sales development representative (SDR).
-Je werkt voor een tech-automatiseringsbureau dat AI-gestuurde oplossingen bouwt.
+You are a professional B2B sales development representative (SDR) for
+Postmaster Digital, a US-based agency.
 
-## Regels
-1. Schrijf ALTIJD in het Nederlands (tenzij het gesprek in het Engels is).
-2. Houd het professioneel maar persoonlijk — geen stijve corporate taal.
-3. Maximaal 150 woorden per reply.
-4. Noem altijd een concreet volgende stap (call, demo, voorstel).
-5. Bij bezwaren: erken het bezwaar, geef een kort tegenargument, stel voor
-   om het in een kort gesprek te bespreken.
-6. Bij desinteresse: wees beleefd, bedank, en laat de deur open.
-7. NOOIT liegen over capabilities of prijzen.
-8. NOOIT druk uitoefenen ("last chance", "beperkt aanbod", etc.).
+{agency_context}
 
-## Gespreksfasen
-- interest: Ze tonen interesse → stel een call/demo voor
-- objection: Ze hebben een bezwaar → erken + tegenargument + call
-- scheduling: Ze willen plannen → bevestig details
-- disqualify: Niet een fit → beleefd afsluiten
+## Rules
+1. Write in English. Keep tone professional but human — no corporate jargon.
+2. Max 120 words per reply.
+3. Always propose a concrete next step (call, audit, demo).
+4. On objections: acknowledge → short counter → propose call.
+5. On disinterest: thank them, leave the door open. One sentence max.
+6. NEVER lie about capabilities or pricing.
+7. NEVER use high-pressure tactics ("limited time", "last chance").
+8. If they mention a specific service or pain, mirror it back.
+
+## Sequence strategy
+{sequence_strategy}
+
+## Conversation stages
+- interest: They show interest → propose a call/demo
+- objection: They push back → acknowledge + counter + call
+- scheduling: They want to meet → confirm details
+- disqualify: Not a fit → polite close
 """
 
 REPLY_PROMPT = """\
@@ -195,6 +208,24 @@ def get_conversation_history(conn, lead_id: str, limit: int = 10) -> list[dict]:
 
 # ── Draft generation ─────────────────────────────────────────────────────────
 
+
+def _count_outbound_emails(history: list[dict]) -> int:
+    """Count how many outbound emails have been sent in this thread."""
+    return sum(1 for m in history if m.get("direction") == "outbound")
+
+
+def _get_sequence_strategy(outbound_count: int) -> str:
+    """Return guidance for where we are in the follow-up sequence."""
+    if outbound_count == 0:
+        return "This is the FIRST email. Keep it short, personal, and value-led."
+    elif outbound_count == 1:
+        return "This is follow-up #1. Reference your first email briefly, add a new angle or case study."
+    elif outbound_count == 2:
+        return "This is follow-up #2. Be shorter. Ask a simple yes/no question."
+    else:
+        return "This is the BREAK-UP email. Last touch — be respectful, leave the door open."
+
+
 @retry(
     stop=stop_after_attempt(3),
     wait=wait_exponential(min=2, max=15),
@@ -220,16 +251,26 @@ def generate_reply(
         "company_name": lead.get("company_name", "Unknown"),
         "website": lead.get("website", "N/A"),
         "icp_score": lead.get("icp_score", "N/A"),
+        "recommended_service": lead.get("recommended_service", "N/A"),
+        "pain_point": lead.get("pain_point", "N/A"),
     }, indent=2)
 
     history_text = ""
     for msg in conversation_history[-6:]:  # Last 6 messages for context
-        direction = "Wij" if msg["direction"] == "outbound" else "Zij"
+        direction = "Us" if msg["direction"] == "outbound" else "Them"
         history_text += f"[{direction}] {msg['body'][:300]}\n\n"
+
+    outbound_count = _count_outbound_emails(conversation_history)
+    sequence_strategy = _get_sequence_strategy(outbound_count)
+
+    system = SDR_SYSTEM_PROMPT.format(
+        agency_context=agency_prompt_snippet(),
+        sequence_strategy=sequence_strategy,
+    )
 
     prompt = REPLY_PROMPT.format(
         company_context=company_context,
-        conversation_history=history_text or "(eerste contact)",
+        conversation_history=history_text or "(first contact)",
         their_reply=their_reply[:1000],
     )
 
@@ -237,7 +278,7 @@ def generate_reply(
         response_model=DraftReply,
         model="gemini-2.0-flash",
         messages=[
-            {"role": "user", "content": SDR_SYSTEM_PROMPT},
+            {"role": "user", "content": system},
             {"role": "user", "content": prompt},
         ],
     )
@@ -332,7 +373,7 @@ def run_sdr_reply(conn, job: dict) -> float:
         with conn.cursor() as cur:
             cur.execute(
                 """SELECT id, company_name, website, contact_email,
-                          icp_score, status
+                          icp_score, status, recommended_service, pain_point
                    FROM leads WHERE id = %s""",
                 (lead_id,),
             )
@@ -350,6 +391,8 @@ def run_sdr_reply(conn, job: dict) -> float:
             "contact_email": row[3],
             "icp_score": row[4],
             "status": row[5],
+            "recommended_service": row[6],
+            "pain_point": row[7],
         }
 
         # Step 2: Store inbound message

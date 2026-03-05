@@ -29,7 +29,9 @@ import {
   Cell,
 } from "recharts"
 import type { Campaign } from "@/lib/types"
+import type { WinningAngle } from "@/lib/types"
 import { cn } from "@/lib/utils"
+import { mockWinningAngles } from "@/lib/mockData"
 
 interface CampaignsResponse {
   data: Campaign[]
@@ -176,6 +178,45 @@ export default function CampaignsPage() {
 
         {/* Reply Intelligence */}
         <ReplyIntelligence replies={replies ?? []} />
+
+        {/* Winning Angles */}
+        <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.5, duration: 0.4 }}>
+          <div className="rounded-lg border border-border bg-card">
+            <div className="p-4 border-b border-border">
+              <h3 className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">
+                🏆 Winning Angles — Top Performing Campaigns
+              </h3>
+            </div>
+            <Table>
+              <TableHeader>
+                <TableRow className="border-border hover:bg-transparent">
+                  <TableHead>#</TableHead>
+                  <TableHead>Campaign</TableHead>
+                  <TableHead className="text-right">Sent</TableHead>
+                  <TableHead className="text-right">Reply Rate</TableHead>
+                  <TableHead className="text-right">Open Rate</TableHead>
+                  <TableHead className="text-right">Replies</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {mockWinningAngles.map((angle, idx) => (
+                  <TableRow key={angle.campaign_id} className="border-border">
+                    <TableCell className="font-mono text-xs text-muted-foreground">{idx + 1}</TableCell>
+                    <TableCell className="font-medium text-sm">{angle.campaign_name}</TableCell>
+                    <TableCell className="text-right font-mono text-xs">{angle.sent}</TableCell>
+                    <TableCell className="text-right font-mono text-xs">
+                      <span className={angle.reply_rate >= 3 ? "text-system-green" : "text-muted-foreground"}>
+                        {angle.reply_rate}%
+                      </span>
+                    </TableCell>
+                    <TableCell className="text-right font-mono text-xs">{angle.open_rate}%</TableCell>
+                    <TableCell className="text-right font-mono text-xs">{angle.replies}</TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </div>
+        </motion.div>
       </div>
     </Shell>
   )

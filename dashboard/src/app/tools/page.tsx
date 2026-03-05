@@ -9,7 +9,8 @@ import {
   Eye, EyeOff, RefreshCw, ExternalLink, Plus,
   ToggleLeft, ToggleRight, Activity, Cpu
 } from 'lucide-react'
-import type { ApiKey, ToolStatus } from '@/lib/types'
+import type { ApiKey, ToolStatus, CompetitorSignal } from '@/lib/types'
+import { mockCompetitorSignals } from '@/lib/mockData'
 
 const fetcher = (url: string) => fetch(url).then(r => r.json())
 
@@ -371,6 +372,42 @@ export default function ToolsPage() {
             ))}
           </div>
         )}
+
+        {/* Competitor Monitor */}
+        <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3, duration: 0.4 }}>
+          <div className="rounded-lg border border-border bg-card p-4">
+            <h3 className="text-xs font-semibold uppercase tracking-widest text-muted-foreground mb-4">
+              🔍 Competitor Monitor — Latest Signals
+            </h3>
+            <div className="flex flex-col gap-3">
+              {mockCompetitorSignals.map((sig) => (
+                <div key={sig.id} className="flex items-start gap-3 rounded-md border border-border p-3 bg-[var(--bg2)]">
+                  <div className={`mt-0.5 h-2 w-2 rounded-full shrink-0 ${
+                    sig.has_weakness ? 'bg-system-green' : 'bg-muted-foreground'
+                  }`} style={sig.has_weakness ? { boxShadow: '0 0 6px var(--green)' } : {}} />
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2">
+                      <span className="font-semibold text-sm">{sig.competitor_name}</span>
+                      <span className="text-[10px] font-medium uppercase tracking-wider px-1.5 py-0.5 rounded bg-white/5 text-muted-foreground">
+                        {sig.signal_type.replace(/_/g, ' ')}
+                      </span>
+                      {sig.has_weakness && (
+                        <span className="text-[10px] font-medium" style={{ color: 'var(--green)' }}>
+                          EXPLOITABLE
+                        </span>
+                      )}
+                    </div>
+                    <p className="mt-1 text-xs text-muted-foreground leading-relaxed">{sig.detail}</p>
+                    <a href={sig.competitor_url} target="_blank" rel="noopener noreferrer"
+                       className="mt-1 inline-flex items-center gap-1 text-[10px] text-muted-foreground hover:text-foreground transition-colors">
+                      <ExternalLink className="h-3 w-3" /> {sig.competitor_url}
+                    </a>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </motion.div>
 
         {/* Add Key Modal */}
         <AnimatePresence>

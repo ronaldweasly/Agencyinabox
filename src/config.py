@@ -93,5 +93,16 @@ def get_instantly_key() -> str | None:
     return os.environ.get("INSTANTLY_API_KEY")
 
 
+def get_competitor_urls() -> list[str]:
+    """Return list of competitor URLs to monitor (comma-separated env var)."""
+    raw = os.environ.get("COMPETITOR_URLS", "")
+    return [u.strip() for u in raw.split(",") if u.strip()]
+
+
+def get_serper_key() -> str | None:
+    """Return Serper.dev API key, or None if not configured."""
+    return os.environ.get("SERPER_API_KEY")
+
+
 # Unique worker identity — hostname + PID guarantees uniqueness per process
 WORKER_ID = f"{socket.gethostname()}-{os.getpid()}"

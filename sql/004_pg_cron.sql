@@ -1,6 +1,13 @@
 -- ============================================================================
 -- 004_pg_cron.sql — Register scheduled jobs with pg_cron
 -- ============================================================================
+-- ⚠️  DO NOT run this against postgres:16-alpine (local Docker).
+--     pg_cron is NOT available in Alpine. This script is for Supabase / managed
+--     Postgres providers that bundle pg_cron.
+--
+-- For local dev, the watchdog + GDPR purge run as application-level cron or
+-- are triggered manually.
+-- ============================================================================
 -- Run this ONCE in the Supabase / Postgres SQL editor after deploying the schema.
 --
 -- Requires: CREATE EXTENSION IF NOT EXISTS pg_cron;
@@ -13,6 +20,18 @@
 --   3. Budget reset — daily at 00:01 UTC — (handled by ensure_daily_spend())
 --   4. Idempotency cleanup — weekly — delete old idempotency keys
 -- ============================================================================
+
+-- Guard: bail out immediately if pg_cron is not available
+DO $$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_available_extensions WHERE name = 'pg_cron'
+  ) THEN
+    RAISE NOTICE '⚠️  pg_cron not available — skipping 004_pg_cron.sql (expected on Alpine/local dev)';
+    RETURN;
+  END IF;
+END
+$$;
 
 -- Enable extension (harmless if already enabled)
 CREATE EXTENSION IF NOT EXISTS pg_cron;

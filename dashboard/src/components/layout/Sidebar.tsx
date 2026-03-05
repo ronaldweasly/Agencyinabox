@@ -21,7 +21,7 @@ export function Sidebar() {
     const links = [
         { href: "/overview", label: "Overview", icon: LayoutDashboard },
         { href: "/companies", label: "Companies", icon: Building2 },
-        { href: "/leads", label: "Leads", icon: Zap, badge: "847" },
+        { href: "/leads", label: "Leads", icon: Zap },
         { href: "/campaigns", label: "Campaigns", icon: Mail },
         { href: "/conversations", label: "Conversations", icon: MessageSquare },
         { href: "/scrapers", label: "Scrapers", icon: Bug },
@@ -58,18 +58,6 @@ export function Sidebar() {
                                         <Icon className="h-4 w-4" />
                                         {link.label}
                                     </div>
-                                    {link.badge && (
-                                        <span
-                                            className={cn(
-                                                "rounded-full px-2 py-0.5 text-xs font-semibold",
-                                                isActive
-                                                    ? "bg-accent/20 text-accent"
-                                                    : "bg-muted text-foreground group-hover:bg-background"
-                                            )}
-                                        >
-                                            {link.badge}
-                                        </span>
-                                    )}
                                 </Link>
                             </li>
                         )

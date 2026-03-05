@@ -56,6 +56,18 @@ export function LeadCard({ company, contact, aiScore, index, selected, onSelect,
         <p className="text-xs text-muted-foreground">
           {company.employee_count} employees · Founded {company.founded_year}
         </p>
+        {company.recommended_service && company.recommended_service !== 'none' && (
+          <div className="mt-1.5 flex items-center gap-2">
+            <Badge variant="outline" className="text-[10px] border-accent/30 text-accent capitalize">
+              {company.recommended_service.replace(/_/g, ' ')}
+            </Badge>
+            {company.pain_point && (
+              <span className="text-[10px] text-muted-foreground italic truncate max-w-[200px]">
+                {company.pain_point}
+              </span>
+            )}
+          </div>
+        )}
       </div>
 
       {/* Email hook */}

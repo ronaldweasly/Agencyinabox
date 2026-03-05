@@ -49,7 +49,7 @@ function formatTime(ts: string) {
 }
 
 export default function ConversationsPage() {
-  const { data } = useSWR('/api/conversations', fetcher, { refreshInterval: 15000 })
+  const { data, mutate } = useSWR('/api/conversations', fetcher, { refreshInterval: 15000 })
   const conversations: Conversation[] = data?.conversations ?? []
   const stats = data?.stats ?? { total: 0, replied: 0, positive: 0, meeting_booked: 0 }
 
@@ -58,6 +58,13 @@ export default function ConversationsPage() {
   const [searchTerm, setSearchTerm] = useState('')
   const [replyText, setReplyText] = useState('')
   const messagesEndRef = useRef<HTMLDivElement>(null)
+
+  // Auto-select first conversation when data loads
+  useEffect(() => {
+    if (!selectedId && conversations.length > 0) {
+      setSelectedId(conversations[0].id)
+    }
+  }, [conversations, selectedId])
 
   const filteredConversations = conversations.filter(c => {
     if (statusFilter !== 'all' && c.status !== statusFilter) return false
@@ -86,6 +93,7 @@ export default function ConversationsPage() {
       body: JSON.stringify({ conversation_id: selectedId, message: replyText.trim() }),
     })
     setReplyText('')
+    mutate()
   }
 
   return (

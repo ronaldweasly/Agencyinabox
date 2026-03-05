@@ -13,10 +13,15 @@ services:
     volumes:
       - pgdata:/var/lib/postgresql/data
       # Auto-run schema migrations on first start
+      # NOTE: 004_pg_cron.sql is intentionally excluded — pg_cron extension is
+      # NOT available in postgres:16-alpine. It's meant for Supabase / managed
+      # Postgres only. See the guard in 004_pg_cron.sql for details.
       - ./sql/001_schema.sql:/docker-entrypoint-initdb.d/001_schema.sql
       - ./sql/002_watchdog.sql:/docker-entrypoint-initdb.d/002_watchdog.sql
       - ./sql/003_gdpr.sql:/docker-entrypoint-initdb.d/003_gdpr.sql
       - ./sql/005_lead_pipeline.sql:/docker-entrypoint-initdb.d/005_lead_pipeline.sql
+      - ./sql/006_companies.sql:/docker-entrypoint-initdb.d/006_companies.sql
+      - ./sql/007_growth_engine.sql:/docker-entrypoint-initdb.d/007_growth_engine.sql
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U postgres"]
       interval: 5s
@@ -36,6 +41,15 @@ services:
       interval: 5s
       timeout: 3s
       retries: 5
+
+  # ── Future worker service should depend on both postgres and redis:
+  # worker:
+  #   build: .
+  #   depends_on:
+  #     postgres:
+  #       condition: service_healthy
+  #     redis:
+  #       condition: service_healthy
 
 volumes:
   pgdata:

@@ -411,6 +411,22 @@ def execute_job(
         from lead_scorer import run_lead_scoring
         return run_lead_scoring(conn, job)
 
+    elif job_type == "ai_score":
+        # Dispatch to Celery/Redis queue instead of running inline.
+        # The ai_scoring_worker picks this up asynchronously.
+        from queue_manager import celery_app  # noqa: F811
+        payload = job.get("payload", {})
+        company_id = str(payload.get("company_id", ""))
+        db_url = os.environ.get("DATABASE_URL", "")
+        if not company_id:
+            raise ValueError("ai_score job requires payload.company_id")
+        celery_app.send_task(
+            "src.workers.ai_scoring_worker.score_company",
+            args=[company_id, db_url],
+            queue="ai_scoring_queue",
+        )
+        return 0.0  # Actual cost tracked by Celery worker
+
     elif job_type == "sdr_reply":
         from sdr_handler import run_sdr_reply
         return run_sdr_reply(conn, job)
@@ -428,6 +444,22 @@ def execute_job(
             raise ValueError("outreach_batch job requires payload.campaign_id")
         send_approved_outreach(conn, campaign_id)
         return 0.0
+
+    elif job_type == "pitch_select":
+        from pitch_selector import run_pitch_select
+        return run_pitch_select(conn, job)
+
+    elif job_type == "intent_scan":
+        from intent_monitor import run_intent_scan
+        return run_intent_scan(conn, job)
+
+    elif job_type == "competitor_scan":
+        from competitor_monitor import run_competitor_scan
+        return run_competitor_scan(conn, job)
+
+    elif job_type == "campaign_sync":
+        from campaign_optimizer import run_campaign_sync
+        return run_campaign_sync(conn, job)
 
     else:
         raise ValueError(f"Unknown job_type: {job_type}")

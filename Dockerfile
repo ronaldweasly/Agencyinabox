@@ -18,6 +18,9 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
+# Install Playwright browsers (required by playwright==1.44.0)
+RUN playwright install --with-deps chromium
+
 # Copy application source
 COPY src/ ./src/
 
