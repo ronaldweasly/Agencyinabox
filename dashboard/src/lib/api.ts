@@ -5,7 +5,7 @@ import {
   mockQueues,
   mockEvents,
   mockCampaigns,
-} from "../../lib/mockData"
+} from "./mockData"
 import type {
   Company,
   Contact,
@@ -13,7 +13,7 @@ import type {
   QueueStatus,
   Campaign,
   PipelineEvent,
-} from "@/lib/types"
+} from "./types"
 
 const DEV_MODE = process.env.NEXT_PUBLIC_DEV_MODE === "true"
 const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:3001"

@@ -32,3 +32,12 @@ bandit==1.7.9
 pytest==8.2.2
 pytest-cov==5.0.0
 pytest-json-report==1.5.0
+
+# Queue & Infrastructure
+redis==5.0.8
+celery==5.3.6
+prometheus-client==0.20.0
+structlog==24.1.0
+datasketch==1.6.4
+playwright==1.44.0
+certstream==1.6.1

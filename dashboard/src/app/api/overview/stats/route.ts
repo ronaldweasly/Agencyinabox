@@ -1,12 +1,25 @@
-import { NextResponse } from "next/server"
-import { mockCompanies } from "../../../../../lib/mockData"
+import { NextResponse } from 'next/server'
 
 export async function GET() {
-  const discovered = 2_847_291 + Math.round(Math.random() * 1000)
-  const enriched = 1_204_847 + Math.round(Math.random() * 500)
-  const scored = 891_203 + Math.round(Math.random() * 300)
-  const qualified = 47_832 + Math.round(Math.random() * 50)
-  const sent = 12_441 + Math.round(Math.random() * 20)
+  const isDev = process.env.NEXT_PUBLIC_DEV_MODE === 'true'
 
-  return NextResponse.json({ discovered, enriched, scored, qualified, sent })
+  if (isDev) {
+    return NextResponse.json({
+      discovered: 2_847_291,
+      enriched:   1_204_847,
+      scored:       891_203,
+      qualified:     47_832,
+      sent:          12_441,
+    })
+  }
+
+  try {
+    const res = await fetch(
+      `${process.env.NEXT_PUBLIC_API_URL}/api/overview/stats`,
+      { next: { revalidate: 5 } }
+    )
+    return NextResponse.json(await res.json())
+  } catch {
+    return NextResponse.json({ error: 'Backend unreachable' }, { status: 502 })
+  }
 }
