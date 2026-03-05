@@ -1,0 +1,85 @@
+@import "tailwindcss";
+@config "../../tailwind.config.js";
+
+@layer base {
+  :root {
+    --radius: 0.5rem;
+
+    /* Core Colors */
+    --bg: #080c10;
+    --bg2: #0d1117;
+    --bg3: #131920;
+    --accent: #00e5ff;
+    --accent2: #7c3aed;
+    --green: #00d68f;
+    --orange: #ff6b35;
+    --red: #ff4d6d;
+    --yellow: #ffd166;
+
+    /* Status Colors */
+    --hot: #ff4d6d;
+    --warm: #ffd166;
+    --cold: #5a6478;
+
+    /* Shadcn Map */
+    --background: 213 33% 4%;
+    --foreground: 0 0% 100%;
+    --card: 216 28% 7%;
+    --card-foreground: 0 0% 100%;
+    --popover: 216 28% 7%;
+    --popover-foreground: 0 0% 100%;
+    --primary: 186 100% 50%;
+    --primary-foreground: 213 33% 4%;
+    --secondary: 212 25% 10%;
+    --secondary-foreground: 0 0% 100%;
+    --muted: 216 28% 7%;
+    --muted-foreground: 215 14% 60%;
+    --accent-base: 212 25% 10%;
+    --destructive: 349 100% 65%;
+    --destructive-foreground: 213 33% 4%;
+    --border: 212 25% 10%;
+    --input: 212 25% 10%;
+    --ring: 186 100% 50%;
+  }
+
+  .dark {
+    --background: 213 33% 4%;
+    --foreground: 0 0% 100%;
+    --card: 216 28% 7%;
+    --card-foreground: 0 0% 100%;
+    --popover: 216 28% 7%;
+    --popover-foreground: 0 0% 100%;
+    --primary: 186 100% 50%;
+    --primary-foreground: 213 33% 4%;
+    --secondary: 212 25% 10%;
+    --secondary-foreground: 0 0% 100%;
+    --muted: 216 28% 7%;
+    --muted-foreground: 215 14% 60%;
+    --accent-base: 212 25% 10%;
+    --destructive: 349 100% 65%;
+    --destructive-foreground: 213 33% 4%;
+    --border: 212 25% 10%;
+    --input: 212 25% 10%;
+    --ring: 186 100% 50%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground;
+    font-feature-settings: "rlig" 1, "calt" 1;
+    background-color: var(--bg);
+  }
+}
+
+@layer base {
+  body {
+    background-color: var(--bg);
+    color: #ffffff;
+    font-feature-settings: "rlig" 1, "calt" 1;
+  }
+}
