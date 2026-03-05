@@ -1,0 +1,27 @@
+version: "3.9"
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: agency-postgres
+    environment:
+      POSTGRES_DB: agency
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: localdev
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+      # Auto-run schema migrations on first start
+      - ./sql/001_schema.sql:/docker-entrypoint-initdb.d/001_schema.sql
+      - ./sql/002_watchdog.sql:/docker-entrypoint-initdb.d/002_watchdog.sql
+      - ./sql/003_gdpr.sql:/docker-entrypoint-initdb.d/003_gdpr.sql
+      - ./sql/005_lead_pipeline.sql:/docker-entrypoint-initdb.d/005_lead_pipeline.sql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+
+volumes:
+  pgdata:

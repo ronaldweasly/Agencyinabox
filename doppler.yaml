@@ -1,0 +1,12 @@
+# doppler.yaml — Doppler CLI project configuration
+# https://docs.doppler.com/docs/cli-config-file
+#
+# Run the worker with all secrets injected:
+#   doppler run -- python -m src
+#
+# Run the DMZ:
+#   doppler run -- uvicorn dmz.main:app --host 0.0.0.0 --port 8001
+
+setup:
+  project: agency-in-a-box
+  config: production

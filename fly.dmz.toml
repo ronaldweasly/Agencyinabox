@@ -1,0 +1,31 @@
+# Agency-in-a-Box — DMZ Service (Fly.io)
+# Deploy: fly deploy --config fly.dmz.toml
+
+app = "agency-dmz"
+primary_region = "ams"
+kill_signal = "SIGTERM"
+kill_timeout = "10s"
+
+[build]
+  dockerfile = "dmz/Dockerfile"
+
+[env]
+  # Non-secret env vars
+  PORT = "8001"
+
+# Always-on: Telegram webhooks arrive anytime
+[http_service]
+  internal_port = 8001
+  force_https = true
+  auto_stop_machines = false   # must always be reachable for webhooks
+  auto_start_machines = true
+  min_machines_running = 1
+  [http_service.concurrency]
+    type = "requests"
+    hard_limit = 100
+    soft_limit = 80
+
+[[vm]]
+  memory = "256mb"
+  cpu_kind = "shared"
+  cpus = 1
