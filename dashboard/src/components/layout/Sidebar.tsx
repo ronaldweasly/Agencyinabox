@@ -10,6 +10,9 @@ import {
     Mail,
     Bug,
     Settings,
+    MapPin,
+    MessageSquare,
+    Wrench,
 } from "lucide-react"
 
 export function Sidebar() {
@@ -20,8 +23,11 @@ export function Sidebar() {
         { href: "/companies", label: "Companies", icon: Building2 },
         { href: "/leads", label: "Leads", icon: Zap, badge: "847" },
         { href: "/campaigns", label: "Campaigns", icon: Mail },
+        { href: "/conversations", label: "Conversations", icon: MessageSquare },
         { href: "/scrapers", label: "Scrapers", icon: Bug },
+        { href: "/targeting", label: "Targeting", icon: MapPin },
         { href: "/settings", label: "Settings", icon: Settings },
+        { href: "/tools", label: "Tools", icon: Wrench },
     ]
 
     return (
